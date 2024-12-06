@@ -78,7 +78,7 @@ function simulateTouchEvent(element, type, options = {}) {
 
 // Функция для проверки уровня энергии
 function checkEnergy() {
-    const energyElement = document.querySelector('#__next > div.sc-89da68c-0.buCEaZ > div > div > div > div > div > div.sc-988de50f-0.hIsbk.sc-d79ddde7-1.eMBvoS > div.sc-988de50f-0.bVMKAa > div.sc-988de50f-0.cyTaIg > div.sc-988de50f-0.cgRPSF > span.sc-ddd208da-0.jBYIpq');
+    const energyElement = document.querySelector('sc-ddd208da-0 jBYIpq');
     if (energyElement) {
         const energyText = energyElement.textContent.replace(',', '');
         const currentEnergy = parseFloat(energyText);
@@ -103,7 +103,7 @@ function clickElement() {
             }, pauseDuration);
         }
     } else {
-        const elements = document.querySelectorAll('.sc-988de50f-0.hbRYVL.sc-9fa9182-0.exNnOf');
+        const elements = document.querySelectorAll('.sc-b47a079e-0.gXbBrT.sc-9fa9182-0.exNnOf');
         const firstElement = elements[0];
 
         if (firstElement) {
@@ -136,7 +136,7 @@ function startAutoClicker() {
 
 setTimeout(() => {
     setInterval(() => {
-        const element = document.querySelector('.sc-988de50f-0.hbRYVL.sc-9fa9182-0.exNnOf');
+        const element = document.querySelector('.sc-b47a079e-0.gXbBrT.sc-9fa9182-0.exNnOf');
         if (element) {
             startAutoClicker();
         }
