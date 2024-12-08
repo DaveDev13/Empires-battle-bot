@@ -6,8 +6,8 @@
 // @version     0.1.0
 // @author      davedev
 // @icon        https://github.com/DaveDev13/Empires-battle-bot/logo.jpg
-// @downloadURL https://github.com/DaveDev13/Empires-battle-bot/raw/main/ffactory-autoclicker.user.js
-// @updateURL   https://github.com/DaveDev13/Empires-battle-bot/raw/main/ffactory-autoclicker.user.js
+// @downloadURL https://github.com/DaveDev13/Empires-battle-bot/raw/main/empire-battle-autoclicker.user
+// @updateURL   https://github.com/DaveDev13/Empires-battle-bot/raw/main/empire-battle-autoclicker.user
 // @homepage    https://github.com/DaveDev13/Empires-battle-bot
 // ==/UserScript==
 
