@@ -1,13 +1,13 @@
 // ==UserScript==
-// @name        Empire battle bot
+// @name        Empire`s battle bot
 // @namespace   DaveDev Scripts
 // @match       https://empiresbattle.com/*
 // @grant       none
-// @version     1.1
+// @version     0.1.0
 // @author      davedev
-// @icon        https://mudachyo.codes/ffactory/logo.jpg
-// @downloadURL https://github.com/mudachyo/Friends-Factory/raw/main/ffactory-autoclicker.user.js
-// @updateURL   https://github.com/mudachyo/Friends-Factory/raw/main/ffactory-autoclicker.user.js
+// @icon        https://github.com/DaveDev13/Empires-battle-bot/logo.jpg
+// @downloadURL https://github.com/DaveDev13/Empires-battle-bot/raw/main/ffactory-autoclicker.user.js
+// @updateURL   https://github.com/DaveDev13/Empires-battle-bot/raw/main/ffactory-autoclicker.user.js
 // @homepage    https://github.com/DaveDev13/Empires-battle-bot
 // ==/UserScript==
 

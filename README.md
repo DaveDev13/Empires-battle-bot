@@ -12,7 +12,7 @@
 
 # Использование
 
-- Открыть [Бота Empire`s Battle bot](https://web.telegram.org/k/#?tgaddr=tg%3A%2F%2Fresolve%3Fdomain%3Dfabrika%26appname%3Dapp%26startapp%3Dref_363008)
+- Открыть [Бота Empire`s Battle bot](https://t.me/EmpiresBattleBot?start=DaveDev)
 - Запустите бота Empire`s Battle bot, если будет выдавать QR-код, обновите страницу с ботом
 
 ## ![Результат](result.jpg)
