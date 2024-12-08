@@ -5,9 +5,9 @@
 // @grant       none
 // @version     0.1.0
 // @author      davedev
-// @icon        https://github.com/DaveDev13/Empires-battle-bot/logo.jpg
-// @downloadURL https://github.com/DaveDev13/Empires-battle-bot/raw/main/empire-battle-autoclicker.user
-// @updateURL   https://github.com/DaveDev13/Empires-battle-bot/raw/main/empire-battle-autoclicker.user
+// @icon        https://raw.githubusercontent.com/DaveDev13/Empires-battle-bot/refs/heads/main/logo.jpg
+// @downloadURL https://github.com/DaveDev13/Empires-battle-bot/raw/main/empires-battle-autoclicker.user
+// @updateURL   https://github.com/DaveDev13/Empires-battle-bot/raw/main/empires-battle-autoclicker.user
 // @homepage    https://github.com/DaveDev13/Empires-battle-bot
 // ==/UserScript==
 
