@@ -7,7 +7,7 @@
 ## Как установить
 
 - Установить в свой браузер расширение [Violentmonkey](https://chromewebstore.google.com/detail/violentmonkey/jinjaccalgkegednnccohejagnlnfdag?hl=be)
-- Для установки **автокликера** установите [этот скрипт](https://github.com/DaveDev13/Empires-battle-bot/raw/main/empire-battle-autoclicker.user.js)
+- Для установки **автокликера** установите [этот скрипт](https://github.com/DaveDev13/Empires-battle-bot/raw/main/empires-battle-autoclicker.user.js)
 - Открыть [Бота Empire`s Battle bot](git@github.com:DaveDev13/Empires-battle-bot.git) и запустить игру
 
 # Использование
