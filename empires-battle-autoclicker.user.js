@@ -6,8 +6,8 @@
 // @version     0.1.0
 // @author      davedev
 // @icon        https://raw.githubusercontent.com/DaveDev13/Empires-battle-bot/refs/heads/main/logo.jpg
-// @downloadURL https://github.com/DaveDev13/Empires-battle-bot/raw/main/empires-battle-autoclicker.user
-// @updateURL   https://github.com/DaveDev13/Empires-battle-bot/raw/main/empires-battle-autoclicker.user
+// @downloadURL https://github.com/DaveDev13/Empires-battle-bot/raw/main/empires-battle-autoclicker.user.js
+// @updateURL   https://github.com/DaveDev13/Empires-battle-bot/raw/main/empires-battle-autoclicker.user.js
 // @homepage    https://github.com/DaveDev13/Empires-battle-bot
 // ==/UserScript==
 
@@ -15,6 +15,7 @@
 const minDelay = 100  // Минимальная задержка клика в миллисекундах
 const maxDelay = 200  // Максимальная задержка клика в миллисекундах
 const checkInterval = 500  // Интервал проверки существования элемента
+const checkModalInterval = 120000  // Интервал проверки существования элемента кнопки проверки
 const energyThreshold = 25  // Пороговое значение энергии
 const minPause = 60 * 1000  // Минимальная пауза в миллисекундах (1 минута)
 const maxPause = 3 * 60 * 1000  // Максимальная пауза в миллисекундах (3 минуты)
@@ -142,3 +143,24 @@ setTimeout(() => {
         }
     }, checkInterval)
 }, 3000)
+
+// Функция для проверки и клика по элементу с заданным классом
+function checkAndClickSliderText() {
+    const sliderElement = document.querySelector('._slider__text_qgtcs_185')
+    if (sliderElement) {
+        const coords = getRandomCoordinates(sliderElement)
+        simulatePointerEvent(sliderElement, 'pointerover', { clientX: coords.x, clientY: coords.y, pressure: 1, pointerId: 5 })
+        simulatePointerEvent(sliderElement, 'pointerenter', { clientX: coords.x, clientY: coords.y, pressure: 1, pointerId: 5 })
+        simulatePointerEvent(sliderElement, 'pointerdown', { clientX: coords.x, clientY: coords.y, pressure: 1, pointerId: 5 })
+        simulateTouchEvent(sliderElement, 'touchstart', { clientX: coords.x, clientY: coords.y, pressure: 1, pointerId: 5 })
+        simulatePointerEvent(sliderElement, 'pointerup', { clientX: coords.x, clientY: coords.y, pressure: 0, pointerId: 5 })
+        simulateTouchEvent(sliderElement, 'touchend', { clientX: coords.x, clientY: coords.y, pressure: 0, pointerId: 5 })
+        sliderElement.click()
+        console.clear()
+    } else {
+        console.log('Элемент кнопки проверки не найден.')
+    }
+}
+
+// Устанавливаем интервал для проверки
+setInterval(checkAndClickSliderText, checkModalInterval)
