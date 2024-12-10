@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name        Empire`s battle bot
 // @namespace   DaveDev Scripts
-// @match       https://empiresbattle.com/*
+// @match       *://*.empiresbattle.com/*
 // @grant       none
-// @version     0.1.1
+// @version     0.1.2
 // @author      davedev
 // @icon        https://raw.githubusercontent.com/DaveDev13/Empires-battle-bot/refs/heads/main/logo.jpg
 // @downloadURL https://github.com/DaveDev13/Empires-battle-bot/raw/main/empires-battle-autoclicker.user.js
