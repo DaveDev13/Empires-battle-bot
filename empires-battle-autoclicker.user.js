@@ -3,7 +3,7 @@
 // @namespace   DaveDev Scripts
 // @match       *://*.empiresbattle.com/*
 // @grant       none
-// @version     0.2.0
+// @version     0.2.1
 // @author      davedev
 // @icon        https://raw.githubusercontent.com/DaveDev13/Empires-battle-bot/refs/heads/main/logo.jpg
 // @downloadURL https://github.com/DaveDev13/Empires-battle-bot/raw/main/empires-battle-autoclicker.user.js
@@ -165,8 +165,8 @@ function checkAndClickSliderText() {
 
         const coords = getRandomCoordinates(sliderElement)
 
-        simulatePointerAndTouch(firstElement, coords, 'pointerover')
-        simulatePointerAndTouch(firstElement, coords, 'pointerdown')
+        simulatePointerAndTouch(sliderElement, coords, 'pointerover')
+        simulatePointerAndTouch(sliderElement, coords, 'pointerdown')
 
         setTimeout(() => {
             sliderElement.click()
@@ -209,10 +209,10 @@ function generateSettings() {
         document.getElementById('autoClickPlay').checked = GAME_SETTINGS.autoClickPlay
     }
 
-    settingsMenu.appendChild(createSettingElement('Min Delay (ms)', 'minDelayMs', 'range', 10, 10000, 10,
+    settingsMenu.appendChild(createSettingElement('Min Delay (ms)', 'minDelayMs', 'range', 10, 2000, 10,
         'EN: Minimum delay between clicks.<br>' +
         'RU: Минимальная задержка между кликами.'))
-    settingsMenu.appendChild(createSettingElement('Max Delay (ms)', 'maxDelayMs', 'range', 10, 10000, 10,
+    settingsMenu.appendChild(createSettingElement('Max Delay (ms)', 'maxDelayMs', 'range', 10, 3000, 10,
         'EN: Maximum delay between clicks.<br>' +
         'RU: Максимальная задержка между кликами.'))
     settingsMenu.appendChild(createSettingElement('Threshold value of energy (ms)', 'energyThreshold', 'range', 0, 1000, 10,
