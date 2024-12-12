@@ -3,7 +3,7 @@
 // @namespace   DaveDev Scripts
 // @match       *://*.empiresbattle.com/*
 // @grant       none
-// @version     0.2.3
+// @version     0.2.4
 // @author      davedev
 // @icon        https://raw.githubusercontent.com/DaveDev13/Empires-battle-bot/refs/heads/main/logo.jpg
 // @downloadURL https://github.com/DaveDev13/Empires-battle-bot/raw/main/empires-battle-autoclicker.user.js
@@ -154,7 +154,9 @@ function stopAutoClicker() {
     }
 }
 
-startAutoClicker()
+setTimeout(() => {
+    startAutoClicker()
+}, 3000)
 
 // Функция для проверки и клика по элементу с заданным классом
 function checkAndClickSliderText() {
@@ -181,6 +183,7 @@ function checkAndClickSliderText() {
 setInterval(checkAndClickSliderText, GAME_SETTINGS.checkModalInterval)
 
 function toggleGamePause() {
+    console.log('isPaused', isPaused)
     if (isPaused) {
         startAutoClicker()
     } else {
