@@ -3,7 +3,7 @@
 // @namespace   DaveDev Scripts
 // @match       *://*.empiresbattle.com/*
 // @grant       none
-// @version     0.2.1
+// @version     0.2.2
 // @author      davedev
 // @icon        https://raw.githubusercontent.com/DaveDev13/Empires-battle-bot/refs/heads/main/logo.jpg
 // @downloadURL https://github.com/DaveDev13/Empires-battle-bot/raw/main/empires-battle-autoclicker.user.js
@@ -19,7 +19,6 @@ let GAME_SETTINGS = {
     maxDelayMs: 999, // Максимальная задержка клика в миллисекундах
     minPause: 66,  // Минимальная пауза в миллисекундах
     maxPause: 666,  // Максимальная пауза в миллисекундах
-    autoClickPlay: true,
 }
 // При загрузке страницы
 let isPaused = JSON.parse(localStorage.getItem('isPaused')) || false // Флаг паузы
@@ -170,7 +169,7 @@ function checkAndClickSliderText() {
 
         setTimeout(() => {
             sliderElement.click()
-            startAutoClicker()
+            toggleGamePause()
         }, getRandomDelay(GAME_SETTINGS.minPause, GAME_SETTINGS.maxPause))
         console.clear()
     } else {
@@ -180,6 +179,20 @@ function checkAndClickSliderText() {
 
 // Устанавливаем интервал для проверки
 setInterval(checkAndClickSliderText, GAME_SETTINGS.checkModalInterval)
+
+function toggleGamePause() {
+    if (isPaused) {
+        startAutoClicker()
+    } else {
+        stopAutoClicker()
+    }
+    isPaused = !isPaused
+    localStorage.setItem('isPaused', isPaused)
+    pauseResumeButton.textContent = isPaused ? 'Resume' : 'Pause'
+}
+
+// в текущей реализации есть проблема
+// Если я перехожу между страницами /main и допустим /drill, то автокликер перестает работать. нужно добавить проверку на запуск кликера и учитывать что кликер мог остановиться вручную или через функцию checkAndClickSliderText, если нет - то через какое-то время запустить автокликер автоматически
 
 function generateSettings() {
     const settingsMenu = document.createElement('div')
@@ -206,7 +219,6 @@ function generateSettings() {
         document.getElementById('maxDelayMs').value = GAME_SETTINGS.maxDelayMs
         document.getElementById('maxDelayMsDisplay').textContent = GAME_SETTINGS.maxDelayMs
         document.getElementById('maxDelayMsDisplay').textContent = GAME_SETTINGS.maxDelayMs
-        document.getElementById('autoClickPlay').checked = GAME_SETTINGS.autoClickPlay
     }
 
     settingsMenu.appendChild(createSettingElement('Min Delay (ms)', 'minDelayMs', 'range', 10, 2000, 10,
@@ -221,9 +233,6 @@ function generateSettings() {
     settingsMenu.appendChild(createSettingElement('Delay check modal (ms)', 'checkModalInterval', 'range', 1000, 10000, 10,
         'EN: The delay between checking for the appearance of a modal window and checking for an autoclicker.<br>' +
         'RU: Задержка между проверкой на появление модального окна с проверкой на автокликера.'))
-    settingsMenu.appendChild(createSettingElement('Auto Click Play', 'autoClickPlay', 'checkbox', null, null, null,
-        'EN: Automatically start the next game at the end of.<br>' +
-        'RU: Автоматически начинать следующую игру по окончании.'))
 
     pauseResumeButton = document.createElement('button')
     pauseResumeButton.textContent = 'Pause'
@@ -633,17 +642,6 @@ function generateSettings() {
 }
 
 generateSettings()
-
-function toggleGamePause() {
-    if (isPaused) {
-        startAutoClicker()
-    } else {
-        stopAutoClicker()
-    }
-    isPaused = !isPaused
-    localStorage.setItem('isPaused', isPaused)
-    pauseResumeButton.textContent = isPaused ? 'Resume' : 'Pause'
-}
 
 // сделать переход на бур и нажатие кнопки _btn_avxs8_497 + возвращение назад
 // <button class="_slider_qgtcs_120" data-direction="2"><div class="_slider__padding_qgtcs_134"><div class="_slider__range_bg_qgtcs_160"></div><p class="_slider__text_qgtcs_185">НАЖАТЬ</p></div></button>
