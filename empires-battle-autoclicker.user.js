@@ -3,7 +3,7 @@
 // @namespace   DaveDev Scripts
 // @match       *://*.empiresbattle.com/*
 // @grant       none
-// @version     0.3.2
+// @version     0.3.3
 // @author      davedev
 // @icon        https://raw.githubusercontent.com/DaveDev13/Empires-battle-bot/refs/heads/main/logo.jpg
 // @downloadURL https://github.com/DaveDev13/Empires-battle-bot/raw/main/empires-battle-autoclicker.user.js
@@ -15,7 +15,7 @@ let GAME_SETTINGS = {
   minClickDelay: 30, // Минимальная задержка клика в миллисекундах
   maxClickDelay: 130, // Максимальная задержка клика в миллисекундах
   energyThreshold: 25,  // Пороговое значение энергии
-  checkModalInterval: 5999,  // Интервал проверки существования элемента кнопки проверки
+  checkModalInterval: 999,  // Интервал проверки существования элемента кнопки проверки
   minPause: 66,  // Минимальная пауза в миллисекундах
   maxPause: 666,  // Максимальная пауза в миллисекундах
 }
@@ -188,6 +188,8 @@ function updateSettingsMenu() {
   document.getElementById('minClickDelayDisplay').textContent = GAME_SETTINGS.minClickDelay
   document.getElementById('maxClickDelay').value = GAME_SETTINGS.maxClickDelay
   document.getElementById('maxClickDelayDisplay').textContent = GAME_SETTINGS.maxClickDelay
+  document.getElementById('energyThreshold').value = GAME_SETTINGS.energyThreshold
+  document.getElementById('checkModalInterval').value = GAME_SETTINGS.checkModalInterval
 }
 
 settingsMenu.appendChild(createSettingElement('Min Click Delay (ms)', 'minClickDelay', 'range', 10, 4000, 10,
