@@ -3,7 +3,7 @@
 // @namespace   DaveDev Scripts
 // @match       *://*.empiresbattle.com/*
 // @grant       none
-// @version     0.3.1
+// @version     0.3.2
 // @author      davedev
 // @icon        https://raw.githubusercontent.com/DaveDev13/Empires-battle-bot/refs/heads/main/logo.jpg
 // @downloadURL https://github.com/DaveDev13/Empires-battle-bot/raw/main/empires-battle-autoclicker.user.js
@@ -142,14 +142,13 @@ function findAndClick() {
 // Функция для проверки и клика по элементу с заданным классом
 function checkAndClickSliderText() {
   const sliderElement = document.querySelector('._slider_qgtcs_120')
+  console.log(sliderElement)
   if (sliderElement) {
-    // toggleGamePause()
-    isGamePaused = true
+    toggleGamePause()
 
     setTimeout(() => {
       triggerClick(sliderElement)
-      isGamePaused = false
-      // toggleGamePause()
+      toggleGamePause()
     }, getRandomDelay(GAME_SETTINGS.minPause, GAME_SETTINGS.maxPause))
     console.clear()
   } else {
