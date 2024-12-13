@@ -147,7 +147,7 @@ function checkAndClickSliderText() {
     toggleGamePause()
 
     setTimeout(() => {
-      triggerClick(sliderElement)
+      sliderElement.click()
       toggleGamePause()
     }, getRandomDelay(GAME_SETTINGS.minPause, GAME_SETTINGS.maxPause))
     console.clear()
