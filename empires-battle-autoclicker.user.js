@@ -3,7 +3,7 @@
 // @namespace   DaveDev Scripts
 // @match       *://*.empiresbattle.com/*
 // @grant       none
-// @version     0.2.5
+// @version     0.3.0
 // @author      davedev
 // @icon        https://raw.githubusercontent.com/DaveDev13/Empires-battle-bot/refs/heads/main/logo.jpg
 // @downloadURL https://github.com/DaveDev13/Empires-battle-bot/raw/main/empires-battle-autoclicker.user.js
@@ -11,642 +11,543 @@
 // @homepage    https://github.com/DaveDev13/Empires-battle-bot
 // ==/UserScript==
 
-// Настройки
 let GAME_SETTINGS = {
-    energyThreshold: 25,  // Пороговое значение энергии
-    checkModalInterval: 5999,  // Интервал проверки существования элемента кнопки проверки
-    minDelayMs: 500, // Минимальная задержка клика в миллисекундах
-    maxDelayMs: 999, // Максимальная задержка клика в миллисекундах
-    minPause: 66,  // Минимальная пауза в миллисекундах
-    maxPause: 666,  // Максимальная пауза в миллисекундах
-}
-// При загрузке страницы
-let isPaused = JSON.parse(localStorage.getItem('isPaused')) || false // Флаг паузы
-let clickTimeout  // Переменная для хранения таймера клика
-let pauseResumeButton
-
-// Функция для генерации случайной задержки
-function getRandomDelay(min, max) {
-    return Math.random() * (max - min) + min
+  minClickDelay: 30, // Минимальная задержка клика в миллисекундах
+  maxClickDelay: 130, // Максимальная задержка клика в миллисекундах
+  energyThreshold: 25,  // Пороговое значение энергии
+  checkModalInterval: 5999,  // Интервал проверки существования элемента кнопки проверки
+  minPause: 66,  // Минимальная пауза в миллисекундах
+  maxPause: 666,  // Максимальная пауза в миллисекундах
 }
 
 // Функция для расчета задержки между кликами
 function getClickDelay() {
-    const minDelay = GAME_SETTINGS.minDelayMs || 500
-    const maxDelay = GAME_SETTINGS.maxDelayMs || 1000
-    return Math.random() * (maxDelay - minDelay) + minDelay
+  const minDelay = GAME_SETTINGS.minClickDelay || 500
+  const maxDelay = GAME_SETTINGS.maxClickDelay || 1000
+  return Math.random() * (maxDelay - minDelay) + minDelay
 }
+// Функция для генерации случайной задержки
+function getRandomDelay(min, max) {
+  return Math.random() * (max - min) + min
+}
+const styles = {
+  success: 'background: #28a745; color: #ffffff; font-weight: bold; padding: 4px 8px; border-radius: 4px;',
+  starting: 'background: #8640ff; color: #ffffff; font-weight: bold; padding: 4px 8px; border-radius: 4px;',
+  error: 'background: #dc3545; color: #ffffff; font-weight: bold; padding: 4px 8px; border-radius: 4px;',
+  info: 'background: #007bff; color: #ffffff; font-weight: bold; padding: 4px 8px; border-radius: 4px;',
+  turbo: 'background: #6c757d; color: #ffffff; font-weight: bold; padding: 4px 8px; border-radius: 4px;'
+}
+const logPrefix = '%c[EmpireBot] '
+
+const originalLog = console.log
+console.log = function () {
+  if (typeof arguments[0] === 'string' && arguments[0].includes('[EmpireBot]')) {
+    originalLog.apply(console, arguments)
+  }
+}
+
+console.error = console.warn = console.info = console.debug = () => { }
+
+console.clear()
+console.log(`${logPrefix}Starting`, styles.starting)
+console.log(`${logPrefix}Created by https://t.me/mudachyo`, styles.starting)
+console.log(`${logPrefix}Github https://github.com/mudachyo/Empire-Coin`, styles.starting)
+
+let isGamePaused = false
 
 // Функция для генерации случайных координат в пределах элемента
 function getRandomCoordinates(element) {
-    const rect = element.getBoundingClientRect()
-    const randomX = rect.left + Math.random() * rect.width
-    const randomY = rect.top + Math.random() * rect.height
-    return { x: randomX, y: randomY }
+  const rect = element.getBoundingClientRect()
+  const randomX = rect.left + Math.random() * rect.width
+  const randomY = rect.top + Math.random() * rect.height
+  return { x: randomX, y: randomY }
+}
+function triggerClick(element) {
+  const coords = getRandomCoordinates(firstElement)
+
+  const events = [
+    new MouseEvent('pointerover', { view: window, bubbles: true, cancelable: true, clientX: coords.x, clientY: coords.y }),
+    new MouseEvent('pointerenter', { view: window, bubbles: true, cancelable: true, clientX: coords.x, clientY: coords.y }),
+    new MouseEvent('mouseover', { view: window, bubbles: true, cancelable: true, clientX: coords.x, clientY: coords.y }),
+    new MouseEvent('mousedown', { view: window, bubbles: true, cancelable: true, clientX: coords.x, clientY: coords.y }),
+    new MouseEvent('pointerdown', { view: window, bubbles: true, cancelable: true, clientX: coords.x, clientY: coords.y }),
+    new MouseEvent('mouseup', { view: window, bubbles: true, cancelable: true, clientX: coords.x, clientY: coords.y }),
+    new MouseEvent('pointerup', { view: window, bubbles: true, cancelable: true, clientX: coords.x, clientY: coords.y })
+  ]
+
+  events.forEach(event => element.dispatchEvent(event))
 }
 
-// Функция для симуляции PointerEvent с случайными координатами
-function simulatePointerEvent(element, type, options = {}) {
-    const event = new PointerEvent(type, {
-        bubbles: true,
-        cancelable: true,
-        pointerId: options.pointerId || 1,
-        width: options.width || 1,
-        height: options.height || 1,
-        pressure: options.pressure || 0.5,
-        pointerType: options.pointerType || 'touch',
-        isPrimary: options.isPrimary || true,
-        clientX: options.clientX,
-        clientY: options.clientY,
-        ...options
-    })
-    element.dispatchEvent(event)
-}
+function findAndClick() {
+  if (isGamePaused) {
+    setTimeout(findAndClick, 1000)
+    return
+  }
 
-// Функция для симуляции TouchEvent с случайными координатами
-function simulateTouchEvent(element, type, options = {}) {
-    const touch = new Touch({
-        identifier: options.pointerId || 1,
-        target: element,
-        clientX: options.clientX,
-        clientY: options.clientY,
-        radiusX: options.width || 1,
-        radiusY: options.height || 1,
-        force: options.pressure || 0.5
-    })
+  const firstElement = document.querySelector("#root > main > div._card_m47z2_353 > img")
+  const targetElement = Array.from(document.querySelectorAll('div[aria-disabled="false"]')).find(el => el.className.startsWith('css-'))
 
-    const event = new TouchEvent(type, {
-        bubbles: true,
-        cancelable: true,
-        touches: [touch],
-        targetTouches: [touch],
-        changedTouches: [touch],
-        ...options
-    })
-    element.dispatchEvent(event)
-}
-function simulatePointerAndTouch(element, coords, type) {
-    simulatePointerEvent(element, type, { clientX: coords.x, clientY: coords.y, pressure: 1, pointerId: 5 })
-    simulateTouchEvent(element, type, { clientX: coords.x, clientY: coords.y, pressure: 1, pointerId: 5 })
-}
-// Функция для проверки уровня энергии
-function checkEnergy() {
-    const energyElement = document.querySelector('._card__energy_descr_m47z2_490')
-    if (energyElement) {
-        const energyText = energyElement.textContent.replace(',', '')
-        const currentEnergy = parseFloat(energyText)
+  if (firstElement) {
+    function clickWithRandomInterval() {
+      if (isGamePaused) {
+        setTimeout(findAndClick, 1000)
+        return
+      }
+      triggerClick(firstElement)
 
-        return currentEnergy
+      setTimeout(clickWithRandomInterval, getClickDelay())
     }
-    return 100
-}
 
-// Функция для выполнения клика с рандомными координатами и задержкой
-function clickElement() {
-    const currentEnergy = checkEnergy()
-
-    if (currentEnergy < GAME_SETTINGS.energyThreshold) {
-        if (!isPaused) {
-            isPaused = true
-            const pauseDuration = getRandomDelay(GAME_SETTINGS.minPause, GAME_SETTINGS.maxPause)
-            console.log(`Энергия низкая (${currentEnergy}), пауза на ${pauseDuration / 1000} секунд.`)
-            setTimeout(() => {
-                isPaused = false
-                startAutoClicker()
-            }, pauseDuration)
-        }
+    console.log(`${logPrefix}Element found. Starting auto-clicker...`, styles.success)
+    clickWithRandomInterval()
+  } else {
+    if (attempts < 5) {
+      attempts++
+      console.log(`${logPrefix}Attempt ${attempts} to find the element failed. Retrying in 3 seconds...`, styles.info)
+      setTimeout(findAndClick, 3000)
     } else {
-        const firstElement = document.querySelector("#root > main > div._card_m47z2_353 > img")
-
-        if (firstElement) {
-            const coords = getRandomCoordinates(firstElement)
-            simulatePointerAndTouch(firstElement, coords, 'pointerover')
-            simulatePointerAndTouch(firstElement, coords, 'pointerdown')
-            firstElement.click()
-            console.clear()
-        }
+      console.log(`${logPrefix}Element not found after 5 attempts. Restarting search...`, styles.error)
+      attempts = 0
+      setTimeout(findAndClick, 3000)
     }
+  }
 }
-
-// Функция для запуска автокликера с рандомной задержкой из настроек
-let autoClickerInterval
-
-function startAutoClicker() {
-    if (autoClickerInterval) return // Если интервал уже существует, выходим из функции
-
-    function tryClick() {
-        if (!isPaused) {
-            clickElement()
-            autoClickerInterval = setTimeout(tryClick, getClickDelay()) // Планируем следующий клик через getClickDelay
-        } else {
-            clearTimeout(autoClickerInterval) // Останавливаем цепочку вызовов, если на паузе
-            autoClickerInterval = null
-        }
-    }
-
-    tryClick()
-}
-
-function stopAutoClicker() {
-    if (autoClickerInterval) {
-        clearTimeout(autoClickerInterval)
-        autoClickerInterval = null
-    }
-}
-
-setTimeout(() => {
-    console.clear()
-    console.log('START')
-    startAutoClicker()
-}, 3000)
 
 // Функция для проверки и клика по элементу с заданным классом
 function checkAndClickSliderText() {
-    const sliderElement = document.querySelector('._slider_qgtcs_120')
-    if (sliderElement) {
-        toggleGamePause()
+  const sliderElement = document.querySelector('._slider_qgtcs_120')
+  if (sliderElement) {
+    // toggleGamePause()
+    isGamePaused = true
 
-        const coords = getRandomCoordinates(sliderElement)
-
-        simulatePointerAndTouch(sliderElement, coords, 'pointerover')
-        simulatePointerAndTouch(sliderElement, coords, 'pointerdown')
-
-        setTimeout(() => {
-            sliderElement.click()
-            toggleGamePause()
-        }, getRandomDelay(GAME_SETTINGS.minPause, GAME_SETTINGS.maxPause))
-        console.clear()
-    } else {
-        console.log('Элемент кнопки проверки не найден.')
-    }
+    setTimeout(() => {
+      triggerClick(sliderElement)
+      isGamePaused = false
+      // toggleGamePause()
+    }, getRandomDelay(GAME_SETTINGS.minPause, GAME_SETTINGS.maxPause))
+    console.clear()
+  } else {
+    console.log('Элемент кнопки проверки не найден.')
+  }
 }
 
 // Устанавливаем интервал для проверки
 setInterval(checkAndClickSliderText, GAME_SETTINGS.checkModalInterval)
 
+const settingsMenu = document.createElement('div')
+settingsMenu.className = 'settings-menu'
+settingsMenu.style.display = 'none'
+
+const menuTitle = document.createElement('h3')
+menuTitle.className = 'settings-title'
+menuTitle.textContent = 'Empire Autoclicker'
+
+const closeButton = document.createElement('button')
+closeButton.className = 'settings-close-button'
+closeButton.textContent = '×'
+closeButton.onclick = () => {
+  settingsMenu.style.display = 'none'
+}
+
+menuTitle.appendChild(closeButton)
+settingsMenu.appendChild(menuTitle)
+
 function toggleGamePause() {
-    console.log('isPaused', isPaused)
-    if (isPaused) {
-        startAutoClicker()
-    } else {
-        stopAutoClicker()
-    }
-    isPaused = !isPaused
-    localStorage.setItem('isPaused', isPaused)
-    pauseResumeButton.textContent = isPaused ? 'Resume' : 'Pause'
+  isGamePaused = !isGamePaused
+  pauseResumeButton.textContent = isGamePaused ? 'Resume' : 'Pause'
+  pauseResumeButton.style.backgroundColor = isGamePaused ? '#e5c07b' : '#98c379'
 }
 
-// в текущей реализации есть проблема
-// Если я перехожу между страницами /main и допустим /drill, то автокликер перестает работать. нужно добавить проверку на запуск кликера и учитывать что кликер мог остановиться вручную или через функцию checkAndClickSliderText, если нет - то через какое-то время запустить автокликер автоматически
-
-function generateSettings() {
-    const settingsMenu = document.createElement('div')
-    settingsMenu.className = 'settings-menu'
-    settingsMenu.style.display = 'none'
-
-    const menuTitle = document.createElement('h3')
-    menuTitle.className = 'settings-title'
-    menuTitle.textContent = 'Empire`s battle Autoclicker'
-
-    const closeButton = document.createElement('button')
-    closeButton.className = 'settings-close-button'
-    closeButton.textContent = '×'
-    closeButton.onclick = () => {
-        settingsMenu.style.display = 'none'
-    }
-
-    menuTitle.appendChild(closeButton)
-    settingsMenu.appendChild(menuTitle)
-
-    function updateSettingsMenu() {
-        document.getElementById('minDelayMs').value = GAME_SETTINGS.minDelayMs
-        document.getElementById('minDelayMsDisplay').textContent = GAME_SETTINGS.minDelayMs
-        document.getElementById('maxDelayMs').value = GAME_SETTINGS.maxDelayMs
-        document.getElementById('maxDelayMsDisplay').textContent = GAME_SETTINGS.maxDelayMs
-        document.getElementById('maxDelayMsDisplay').textContent = GAME_SETTINGS.maxDelayMs
-    }
-
-    settingsMenu.appendChild(createSettingElement('Min Delay (ms)', 'minDelayMs', 'range', 10, 2000, 10,
-        'EN: Minimum delay between clicks.<br>' +
-        'RU: Минимальная задержка между кликами.'))
-    settingsMenu.appendChild(createSettingElement('Max Delay (ms)', 'maxDelayMs', 'range', 10, 3000, 10,
-        'EN: Maximum delay between clicks.<br>' +
-        'RU: Максимальная задержка между кликами.'))
-    settingsMenu.appendChild(createSettingElement('Threshold value of energy (ms)', 'energyThreshold', 'range', 0, 1000, 10,
-        'EN: The threshold value of the energy before the clicks stop.<br>' +
-        'RU: Пороговое значение энергии до остановки кликов.'))
-    settingsMenu.appendChild(createSettingElement('Delay check modal (ms)', 'checkModalInterval', 'range', 1000, 10000, 10,
-        'EN: The delay between checking for the appearance of a modal window and checking for an autoclicker.<br>' +
-        'RU: Задержка между проверкой на появление модального окна с проверкой на автокликера.'))
-
-    pauseResumeButton = document.createElement('button')
-    pauseResumeButton.textContent = 'Pause'
-    pauseResumeButton.className = 'pause-resume-btn'
-    pauseResumeButton.onclick = toggleGamePause
-
-    settingsMenu.appendChild(pauseResumeButton)
-
-    /* 
-      const socialButtons = document.createElement('div');
-      socialButtons.className = 'social-buttons';
-      
-      const githubButton = document.createElement('a');
-      githubButton.href = 'https://github.com/mudachyo/Empire`s';
-      githubButton.target = '_blank';
-      githubButton.className = 'social-button';
-      githubButton.innerHTML = '<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAACXBIWXMAAAsTAAALEwEAmpwYAAADv0lEQVR4nO2ZW4iNURTHP4YMcs+4X3In8eASxgMpcosXhPJCcifhlTzILZdGKY/y4M0tdx5JeDAyDDMkxqUwjfu4HD8t1qnjtM/37X3Ot8+ZNP/adTrft9Ze/73XXpf9BUEj/lMAHYC5wB7gLFAJ1ALfdMjvB/pM3pkDtA8aAoAWwGLgIvATd4jMeWCR6AoKQKAlsBF4QXyoATYAxfkiMR2oxh+qgGm+3egg+cNR2fm4SXQBbpN/3ARK4iLRV7e7UHgkNuRKorOG0UKjGuiaLYniArlTmJu5h2jgMA0PZdmE2DBsUbcbDWwFnuZgnGT7zcBIrQ72Rbw/1SXZReWJngY3FEJfgSvAemAiMBBorWOQ/rcKOAV8BNYCRWm6Rloc/mgX04wdBWP2BZpbrVbIu0A3i/nX2yQ9m7Ij3kT1rw1dLeZ/HrorWgDaYIhHIqWWNiwMUyJVrA3meySy2tKGc5kUdHAoxbd7JHLE0oYfQFuTAmmKbPBeDqRHIkOB75a2zDYp2GspvM8XiSSA45a27DYJSwtqg7GBZwDzLG05bRKWRGPjl83yQGSwJZFKk/BbC8G3vkkIgF6WRN4E6dCbjijIO00CzwCGp3lBrY5fafbUm4STkWKS1jv9gI5Ad/2dHN6JpEJcWVODjCZaC/ZILqxJoE4f3gDuAI/V3V7p7+RYEHgGUBbiFZ9TjkGtSfihPryqpfQ6idNasY7QlvfPquSBSFOdqzcwTCIlMFMr5516FyZ4YBK+oA93aBm+HzgBXAPKdTfe6TlZ4nk36vVMPAEqgFvAGeCQ9kJ7M5YpUnZgj0+yUx5ILDcc6DBsMymZghu+AEvjcDVtH3Y5khBMNilrZRmC03Fdz1JRFgRa62KI27qiPmNflHJO0iF9yjJJQCGKXwPHgJWyUkB/oF2K7k7Sx8h1KLBJygttd7PF2bAVkpXNFPJKtQcXg23cToztkqK7RP+TZ3FgRlTYk0hhQrk+HwN8iCBRGjJHaQxkqsSWKL+V0JsJM1NKiAvqGsmPOM+Ay8Cs0An+yq/Ikchqq9sN4K6zXzpAdzbTHFG4Y12BAxOAhEFJIq78oUHBFQlgnOtEkkVNqNOLtZ6Rfhquf0AWRA5mM1FzrbtcUOSo3wWXXC4A0ydr6+LLWei3RUXOX4CBPsD9AhK5Jx1jTiRSJmwjlWYBiFyO/Vu8+nRZhmgWN5EEcMDrRQcwSvsDX0TKgfF+rDf30WvTvqPUZKHnZYq86FqTj+umTBlaWtCTyfLFUX62ys7IJSc1ohGBP/wGjidhuRxqAwcAAAAASUVORK5CYII=" alt="github">';
-      socialButtons.appendChild(githubButton);
-      
-      const telegramButton = document.createElement('a');
-      telegramButton.href = 'https://t.me/shopalenka';
-      telegramButton.target = '_blank';
-      telegramButton.className = 'social-button';
-      telegramButton.innerHTML = '<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAACXBIWXMAAAsTAAALEwEAmpwYAAADKElEQVR4nO2a34tNURTHD+HOGGGIOxSFPHhSkj9AlIkRHjQxnsSTh+vH5EGKN3MpKUkevXmQuDQX4YEnEZIMd4YXFHORB7+Zj1a2nE77/Nj77nPPofnWrds9Z3/X+t6999prrXM8bxT/KYBpwDrgCHAJGADeAV/VR74/VtcOq3vbvTwAaAG2AFeBn5jjB3AZ6BEuLwMBrcAe4BXuIFy7hbtZItYAz0gPQ8DqtJfRMZqH08BE1yJmAfdoPu4AHa5EzFfTnRUGxYdGRcwEnpI9hqxnRkWmLJZTGO5ahWjgFPnDCZsQm1d0miypLDd3ks0fv8SAXvKPnUkOPZdpR1J8Bz4Z3P8yclZUAtgsjABVYAMwGRgHXDQYvzlKiGSxaeM9cBRYqLG/y4CnGlVPSFqdFh4A24G2iD+ybMAnvk7VkaxPwXkxVgFWAGNCl8JfH84Z8q/VkUhl5woSMA4As+OcD/jw0NBOWUciJWijuAl0A+NDHJ2rKsJuzbWxhpFLUNEZsU0OP6p0ZnHMv70V+CAzH3J9joXtAR3RW4sTdi8wPUZAB3BejemLuG+5hZA3OiLpdCTBFcl3ZClECVCcPap7IjgYc+82CyFfbIRIBFoZ57ziKgYi0L4EY0xCb6SQesygz8CiBA5tBIZ943oTijcNvYJh280us3JdkjZggWYvnAmkIKUkItT4mqvNbpLn/MEj4CxwQ5MV7DAQ0WbZ4KukfSDeSipC2V5maaesI5NerCs8ByYZCJEzxgZdOrJ2x0mjpBtLEgqRbNgUUsNMCSOUM8IlxNghYEKMkGsW3P1xB1gauB+VwgCvLTg3ZVXqyoG7P5hQqk6mKV4AhahZ9lRrP+1+7lKfvT4LjlKkiCa2g0bU2SMd92+GY2uJO47yfIL8YlUiET4xJ8kfjhuJ8G18Wc95we3YDR4hZgbwJGsF/C7iilYiAuFxMGMR8xoSEUjR5flEFsup6ESET0whg4ehrU5FBAR1przUasYhtgExLapKlK64KwhXKas3IAoq0axalgAypl8669ah1TWkoSy9WNUNqagXaOq+l2rq6rcL6p6u0HpiFN6/j19y2btcBwDRQQAAAABJRU5ErkJggg==" alt="telegram">';
-      socialButtons.appendChild(telegramButton);
-      
-      const donateButton = document.createElement('a');
-      donateButton.href = 'https://mudachyo.codes/donate/';
-      donateButton.target = '_blank';
-      donateButton.className = 'social-button';
-      donateButton.innerHTML = '<img src="data:image/png;base64,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" alt="hand-holding-heart--v1">';
-      socialButtons.appendChild(donateButton);
-      
-      settingsMenu.appendChild(socialButtons); */
-
-    document.body.appendChild(settingsMenu)
-
-    const settingsButton = document.createElement('button')
-    settingsButton.className = 'settings-button'
-    settingsButton.textContent = '⚙️'
-    settingsButton.onclick = () => {
-        settingsMenu.style.display = settingsMenu.style.display === 'block' ? 'none' : 'block'
-    }
-    document.body.appendChild(settingsButton)
-
-    const style = document.createElement('style')
-    style.textContent = `
-      .settings-menu {
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        background-color: rgba(17, 17, 17, 0.95);
-        border-radius: 16px;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-        color: #ffffff;
-        font-family: 'Inter', sans-serif;
-        z-index: 10000;
-        padding: 16px;
-        width: 340px;
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-      }
-
-      .settings-title {
-        color: #ffffff;
-        font-size: 16px;
-        font-weight: 600;
-        margin-bottom: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding-bottom: 8px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      }
-
-      .settings-close-button {
-        background: rgba(255, 255, 255, 0.1);
-        border: none;
-        color: #ffffff;
-        font-size: 16px;
-        cursor: pointer;
-        padding: 4px 8px;
-        border-radius: 8px;
-        transition: all 0.2s;
-      }
-
-      .setting-item {
-        background: rgba(255, 255, 255, 0.05);
-        padding: 10px;
-        border-radius: 12px;
-        margin-bottom: 6px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 10px;
-      }
-
-      .setting-label {
-        display: flex;
-        align-items: center;
-        width: 110px;
-      }
-
-      .setting-label-text {
-        color: #ffffff;
-        font-size: 12px;
-        font-weight: 500;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-
-      .help-icon {
-        position: relative;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        background: rgba(255, 255, 255, 0.1);
-        padding: 2px 6px;
-        border-radius: 6px;
-        margin-left: auto;
-        font-size: 10px;
-        cursor: help;
-        z-index: 1;
-        width: 14px;
-        height: 14px;
-        flex-shrink: 0;
-      }
-
-      .help-icon .tooltiptext {
-        visibility: hidden;
-        width: 200px;
-        background-color: #000000;
-        color: #ffffff;
-        text-align: left;
-        border-radius: 8px;
-        padding: 8px;
-        position: absolute;
-        z-index: 99999;
-        left: 24px;
-        top: 50%;
-        transform: translateY(-50%);
-        opacity: 0;
-        transition: opacity 0.3s;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        font-size: 11px;
-        line-height: 1.4;
-        white-space: normal;
-        pointer-events: none;
-      }
-
-      .help-icon .tooltiptext::after {
-        content: "";
-        position: absolute;
-        top: 50%;
-        left: -10px;
-        margin-top: -5px;
-        border-width: 5px;
-        border-style: solid;
-        border-color: transparent #000000 transparent transparent;
-      }
-
-      .help-icon:hover .tooltiptext {
-        visibility: visible;
-        opacity: 1;
-      }
-
-      .setting-input {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        width: 166px;
-        flex-shrink: 0;
-        justify-content: flex-end;
-      }
-
-      .setting-slider {
-        -webkit-appearance: none;
-        width: 100%;
-        height: 4px;
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 2px;
-        outline: none;
-      }
-
-      .setting-slider::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        width: 14px;
-        height: 14px;
-        background: #ffffff;
-        border-radius: 50%;
-        cursor: pointer;
-        transition: all 0.2s;
-      }
-
-      .setting-value {
-        min-width: 30px;
-        text-align: right;
-        font-size: 12px;
-      }
-
-      .pause-resume-btn {
-        width: 100%;
-        padding: 8px;
-        background: rgba(255, 255, 255, 0.1);
-        border: none;
-        border-radius: 12px;
-        color: #ffffff;
-        font-weight: 600;
-        font-size: 12px;
-        cursor: pointer;
-        transition: all 0.2s;
-        margin-top: 12px;
-      }
-
-      .social-buttons {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 8px;
-        margin-top: 12px;
-      }
-
-      .social-button {
-        background: rgba(255, 255, 255, 0.05);
-        padding: 8px;
-        border-radius: 12px;
-        color: #ffffff;
-        text-decoration: none;
-        font-size: 10px;
-        transition: all 0.2s;
-        text-align: center;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-
-      .social-button img {
-        width: 23px;
-        height: 23px;
-      }
-
-      .settings-button {
-        position: fixed;
-        bottom: 30px;
-        right: 30px;
-        background: #227725e6;
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 16px;
-        width: 50px;
-        height: 50px;
-        font-size: 24px;
-        cursor: pointer;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-        transition: all 0.3s;
-        z-index: 999999;
-      }
-
-      .settings-button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 12px 36px rgba(0, 0, 0, 0.3);
-      }
-
-      .switch {
-        position: relative;
-        display: inline-block;
-        width: 50px;
-        height: 24px;
-        margin-left: auto;
-      }
-
-      .switch input {
-        opacity: 0;
-        width: 0;
-        height: 0;
-      }
-
-      .slider {
-        position: absolute;
-        cursor: pointer;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background-color: rgba(255, 255, 255, 0.1);
-        transition: .4s;
-        border-radius: 24px;
-      }
-
-      .slider:before {
-        position: absolute;
-        content: "";
-        height: 20px;
-        width: 20px;
-        left: 2px;
-        bottom: 2px;
-        background-color: white;
-        transition: .4s;
-        border-radius: 50%;
-      }
-
-      input:checked + .slider {
-        background-color: #227725;
-      }
-
-      input:checked + .slider:before {
-        transform: translateX(26px);
-      }
-    `
-    document.head.appendChild(style)
-
-    function createSettingElement(label, id, type, min, max, step, tooltipText) {
-        const container = document.createElement('div')
-        container.className = 'setting-item'
-
-        const labelContainer = document.createElement('div')
-        labelContainer.className = 'setting-label'
-
-        const labelElement = document.createElement('span')
-        labelElement.className = 'setting-label-text'
-        labelElement.textContent = label
-
-        const helpIcon = document.createElement('span')
-        helpIcon.textContent = '?'
-        helpIcon.className = 'help-icon'
-
-        const tooltipSpan = document.createElement('span')
-        tooltipSpan.className = 'tooltiptext'
-        tooltipSpan.innerHTML = tooltipText
-        helpIcon.appendChild(tooltipSpan)
-
-        labelContainer.appendChild(labelElement)
-        labelContainer.appendChild(helpIcon)
-
-        const inputContainer = document.createElement('div')
-        inputContainer.className = 'setting-input'
-
-        let input
-        if (type === 'checkbox') {
-            const switchLabel = document.createElement('label')
-            switchLabel.className = 'switch'
-
-            input = document.createElement('input')
-            input.type = 'checkbox'
-            input.id = id
-            input.checked = GAME_SETTINGS[id]
-            input.addEventListener('change', (e) => {
-                GAME_SETTINGS[id] = e.target.checked
-                saveSettings()
-            })
-
-            const slider = document.createElement('span')
-            slider.className = 'slider'
-
-            switchLabel.appendChild(input)
-            switchLabel.appendChild(slider)
-            inputContainer.appendChild(switchLabel)
-        } else {
-            input = document.createElement('input')
-            input.type = type
-            input.id = id
-            input.min = min
-            input.max = max
-            input.step = step
-            input.value = GAME_SETTINGS[id]
-            input.className = 'setting-slider'
-
-            const valueDisplay = document.createElement('span')
-            valueDisplay.id = `${id}Display`
-            valueDisplay.textContent = GAME_SETTINGS[id]
-            valueDisplay.className = 'setting-value'
-
-            input.addEventListener('input', (e) => {
-                GAME_SETTINGS[id] = parseFloat(e.target.value)
-                valueDisplay.textContent = e.target.value
-                saveSettings()
-            })
-
-            inputContainer.appendChild(input)
-            inputContainer.appendChild(valueDisplay)
-        }
-
-        container.appendChild(labelContainer)
-        container.appendChild(inputContainer)
-        return container
-    }
-
-    function saveSettings() {
-        localStorage.setItem('Empire`sAutoclickerSettings', JSON.stringify(GAME_SETTINGS))
-    }
-
-    function loadSettings() {
-        const savedSettings = localStorage.getItem('Empire`sAutoclickerSettings')
-        if (savedSettings) {
-            const parsedSettings = JSON.parse(savedSettings)
-            GAME_SETTINGS = {
-                ...GAME_SETTINGS,
-                ...parsedSettings
-            }
-        }
-    }
-
-    loadSettings()
-    updateSettingsMenu()
+function updateSettingsMenu() {
+  document.getElementById('minClickDelay').value = GAME_SETTINGS.minClickDelay
+  document.getElementById('minClickDelayDisplay').textContent = GAME_SETTINGS.minClickDelay
+  document.getElementById('maxClickDelay').value = GAME_SETTINGS.maxClickDelay
+  document.getElementById('maxClickDelayDisplay').textContent = GAME_SETTINGS.maxClickDelay
 }
 
-generateSettings()
+settingsMenu.appendChild(createSettingElement('Min Click Delay (ms)', 'minClickDelay', 'range', 10, 4000, 10,
+  'EN: Minimum delay between clicks.<br>' +
+  'RU: Минимальная задержка между кликами.'))
+settingsMenu.appendChild(createSettingElement('Max Click Delay (ms)', 'maxClickDelay', 'range', 10, 5000, 10,
+  'EN: Maximum delay between clicks.<br>' +
+  'RU: Максимальная задержка между кликами.'))
+settingsMenu.appendChild(createSettingElement('Threshold value of energy (ms)', 'energyThreshold', 'range', 0, 1000, 10,
+  'EN: The threshold value of the energy before the clicks stop.<br>' +
+  'RU: Пороговое значение энергии до остановки кликов.'))
+settingsMenu.appendChild(createSettingElement('Delay check modal (ms)', 'checkModalInterval', 'range', 1000, 10000, 10,
+  'EN: The delay between checking for the appearance of a modal window and checking for an autoclicker.<br>' +
+  'RU: Задержка между проверкой на появление модального окна с проверкой на автокликера.'))
 
-// сделать переход на бур и нажатие кнопки _btn_avxs8_497 + возвращение назад
-// <button class="_slider_qgtcs_120" data-direction="2"><div class="_slider__padding_qgtcs_134"><div class="_slider__range_bg_qgtcs_160"></div><p class="_slider__text_qgtcs_185">НАЖАТЬ</p></div></button>
+const messageBox = document.createElement('div')
+messageBox.className = 'message-box'
+messageBox.style.display = 'none'
+document.body.appendChild(messageBox)
+
+const pauseResumeButton = document.createElement('button')
+pauseResumeButton.textContent = 'Pause'
+pauseResumeButton.className = 'pause-resume-btn'
+pauseResumeButton.onclick = toggleGamePause
+settingsMenu.appendChild(pauseResumeButton)
+
+const socialButtons = document.createElement('div')
+socialButtons.className = 'social-buttons'
+
+const githubButton = document.createElement('a')
+githubButton.href = 'https://github.com/mudachyo/Empire-Coin'
+githubButton.target = '_blank'
+githubButton.className = 'social-button'
+githubButton.innerHTML = '<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAACXBIWXMAAAsTAAALEwEAmpwYAAADtklEQVR4nO2ZSWgVQRCGP2OCS3CJYoy7uCtiDi6o8aAIikvQi4oGvCiiRo2E6FXJQdxQg4LgUTx4cyPuHhVRD0bcsyDu4IJrTNTnSEMNPOfNm1czb2YSJD8UDNNT1fV3V1dX90AH/l8UAEuBfUAt8Bj4CLSKmOdH0ma+WQL0pp2gC1AGXAJ+A5ZPMToXgFViK3Z0AyqBVwGcTycvga1A17hILAAaQiTglHpgfpQEzNTXREjAKcdl5kNFf+BOjCQskVtAYVgkhst0W20kT8WHrNBP0qjVxtIAFAUl0bWNwsnyCLNAKfpoO3DecsjhICnWy+B2CbspwA7gWRbOmd1+G1As1cGBDN/P05LoptgnBruEoSH0A7gKVACzgNFAvsgYebcROAN8BTYDnR22ihWLXxVilYpRTLf75mlHy+PbAYr+zUB5oouy7Ah9o0pCkaL/F5lmpUwZ1+MiJFKi9GGll5FLSiPLIyRSrvThfDoDBT5K8eoIiRxT+vAL6OlmYKnSwGdZkFFhPPBT6Uupm4H9SmWT56PGSaUve92Ua5XK02Igskzpy1k35afKuMyNgchYJRFT0KbgvULRfBMHhiiJvHNTblUomm86xUBkoiMKPor8cfjT4qZsZ4rZUu+MAPoAA+XZljiIJCNXtoYC6dtUFYOSBjYFn6TxJnAXaJRQeiPPtqwgehz2iIrvScvAzFIKnkjjNUmxWyRPm4p1khw37VGJGjnS11BggmTKRVI575a7MPsIkIKL0rhLqsuDwCngOlAns/FBpnN1xLPRIqPdBDwAbgPngCNyFtrvVaZUKzOFkW8yU2FjncuC9pKdbkbm+jBgpBlYE1KomZJ8j08SRua4GeuuTMFOuSFryXnS0yBfBqMxQL8tXucie504xZxT1soGlM7wW+AEsEFGaiTQK8l2XznHmOvQKikvvgYgYImYkiotSj1SXomcwd8qw65KbihtFMq75iyct5JkYaa015RGsU7apwJfMpAwpNOhJAQy9eKLJyo8DJhcbpcQFyU07J84z4ErwOJMHQDrsyRSrr3duBckLn0gx6MPK4Pc9VOBzwQSLkYSIe4fGwKQSADT/XZ0JI2xT3KxNlgTpx4YFYBITZCO8qTu8tNRZ5/2/di+7PMC8B/09BnLfqG1+yCMP8DDgIdtSOS+nBhDQQ+pNOMmciWKf/F5UmInYiCSAA5FfdExWc4HURGpA2YQE3IlBTc4fvj7xeskfWNrU0zXTSnIkbLldFL54gelorswyz2pAx0gIvwFLXDNiM6zHVAAAAAASUVORK5CYII=">GitHub'
+socialButtons.appendChild(githubButton)
+
+const telegramButton = document.createElement('a')
+telegramButton.href = 'https://t.me/shopalenka'
+telegramButton.target = '_blank'
+telegramButton.className = 'social-button'
+telegramButton.innerHTML = '<img src="data:image/png;base64,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">Telegram Channel'
+socialButtons.appendChild(telegramButton)
+
+settingsMenu.appendChild(socialButtons)
+
+document.body.appendChild(settingsMenu)
+
+const settingsButton = document.createElement('button')
+settingsButton.className = 'settings-button'
+settingsButton.textContent = '⚙️'
+settingsButton.onclick = () => {
+  settingsMenu.style.display = settingsMenu.style.display === 'block' ? 'none' : 'block'
+}
+document.body.appendChild(settingsButton)
+
+const style = document.createElement('style')
+style.textContent = `
+  .settings-menu {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(40, 44, 52, 0.95);
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    color: #abb2bf;
+    font-family: 'Arial', sans-serif;
+    z-index: 10000;
+    padding: 20px;
+    width: 300px;
+  }
+  .settings-title {
+    color: #61afef;
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .settings-close-button {
+    background: none;
+    border: none;
+    color: #e06c75;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 0;
+  }
+  .setting-item {
+    margin-bottom: 12px;
+  }
+  .setting-label {
+    display: flex;
+    align-items: center;
+    margin-bottom: 4px;
+  }
+  .setting-label-text {
+    color: #e5c07b;
+    margin-right: 5px;
+  }
+  .help-icon {
+    cursor: help;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background-color: #61afef;
+    color: #282c34;
+    font-size: 10px;
+    font-weight: bold;
+  }
+  .setting-input {
+    display: flex;
+    align-items: center;
+  }
+  .setting-slider {
+    flex-grow: 1;
+    margin-right: 8px;
+  }
+  .setting-value {
+    min-width: 30px;
+    text-align: right;
+    font-size: 11px;
+  }
+  .tooltip {
+    position: relative;
+  }
+  .tooltip .tooltiptext {
+    visibility: hidden;
+    width: 200px;
+    background-color: #4b5263;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px;
+    position: absolute;
+    z-index: 1;
+    bottom: 125%;
+    left: 50%;
+    margin-left: -100px;
+    opacity: 0;
+    transition: opacity 0.3s;
+    font-size: 11px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  }
+  .tooltip:hover .tooltiptext {
+    visibility: visible;
+    opacity: 1;
+  }
+  .pause-resume-btn {
+    display: block;
+    width: calc(100% - 10px);
+    padding: 8px;
+    margin: 15px 5px;
+    background-color: #98c379;
+    color: #282c34;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 14px;
+    transition: background-color 0.3s;
+  }
+  .pause-resume-btn:hover {
+    background-color: #7cb668;
+  }
+  .social-buttons {
+    margin-top: 15px;
+    display: flex;
+    justify-content: space-around;
+    white-space: nowrap;
+  }
+  .social-button {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 8px;
+    border-radius: 4px;
+    background-color: #282c34;
+    color: #abb2bf;
+    text-decoration: none;
+    font-size: 12px;
+    transition: background-color 0.3s;
+  }
+  .social-button:hover {
+    background-color: #4b5263;
+  }
+  .social-button img {
+    width: 16px;
+    height: 16px;
+    margin-right: 5px;
+  }
+  .settings-button {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: rgba(36, 146, 255, 0.8);
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    z-index: 9999;
+  }
+.auto-spin-btn {
+  display: block;
+  width: calc(100% - 10px);
+  padding: 8px;
+  margin: 15px 5px;
+  background-color: #e06c75;
+  color: #282c34;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 14px;
+  transition: background-color 0.3s;
+}
+.auto-spin-btn:hover {
+  opacity: 0.9;
+}
+.message-box {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(40, 44, 52, 0.9);
+  color: #e06c75;
+  padding: 10px 20px;
+  border-radius: 5px;
+  font-family: 'Arial', sans-serif;
+  font-size: 14px;
+  z-index: 10001;
+  text-align: center;
+}
+.auto-turbo-btn {
+  display: block;
+  width: calc(100% - 10px);
+  padding: 8px;
+  margin: 15px 5px;
+  background-color: #e06c75;
+  color: #282c34;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 14px;
+  transition: background-color 0.3s;
+}
+.auto-turbo-btn:hover {
+  opacity: 0.9;
+}
+.hide-ui-btn {
+  display: block;
+  width: calc(100% - 10px);
+  padding: 8px;
+  margin: 15px 5px;
+  background-color: #e06c75;
+  color: #282c34;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 14px;
+  transition: background-color 0.3s;
+}
+.hide-ui-btn:hover {
+  opacity: 0.9;
+}
+.hidden-ui-message {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(40, 44, 52, 0.95);
+  color: #abb2bf;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-family: 'Arial', sans-serif;
+  font-size: 14px;
+  text-align: center;
+  z-index: 9998; 
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  max-width: 80%;
+  word-wrap: break-word;
+  pointer-events: none;
+}
+`
+document.head.appendChild(style)
+
+function createSettingElement(label, id, type, min, max, step, tooltipText) {
+  const container = document.createElement('div')
+  container.className = 'setting-item'
+
+  const labelContainer = document.createElement('div')
+  labelContainer.className = 'setting-label'
+
+  const labelElement = document.createElement('span')
+  labelElement.className = 'setting-label-text'
+  labelElement.textContent = label
+
+  const helpIcon = document.createElement('span')
+  helpIcon.textContent = '?'
+  helpIcon.className = 'help-icon tooltip'
+
+  const tooltipSpan = document.createElement('span')
+  tooltipSpan.className = 'tooltiptext'
+  tooltipSpan.innerHTML = tooltipText
+  helpIcon.appendChild(tooltipSpan)
+
+  labelContainer.appendChild(labelElement)
+  labelContainer.appendChild(helpIcon)
+
+  const inputContainer = document.createElement('div')
+  inputContainer.className = 'setting-input'
+
+  let input
+  if (type === 'checkbox') {
+    input = document.createElement('input')
+    input.type = 'checkbox'
+    input.id = id
+    input.checked = GAME_SETTINGS[id]
+    input.addEventListener('change', (e) => {
+      GAME_SETTINGS[id] = e.target.checked
+      saveSettings()
+    })
+    inputContainer.appendChild(input)
+  } else {
+    input = document.createElement('input')
+    input.type = type
+    input.id = id
+    input.min = min
+    input.max = max
+    input.step = step
+    input.value = GAME_SETTINGS[id]
+    input.className = 'setting-slider'
+
+    const valueDisplay = document.createElement('span')
+    valueDisplay.id = `${id}Display`
+    valueDisplay.textContent = GAME_SETTINGS[id]
+    valueDisplay.className = 'setting-value'
+
+    input.addEventListener('input', (e) => {
+      GAME_SETTINGS[id] = parseFloat(e.target.value)
+      valueDisplay.textContent = e.target.value
+      saveSettings()
+    })
+
+    inputContainer.appendChild(input)
+    inputContainer.appendChild(valueDisplay)
+  }
+
+  container.appendChild(labelContainer)
+  container.appendChild(inputContainer)
+  return container
+}
+
+function saveSettings() {
+  localStorage.setItem('EmpireAutoclickerSettings', JSON.stringify(GAME_SETTINGS))
+}
+
+function loadSettings() {
+  const savedSettings = localStorage.getItem('EmpireAutoclickerSettings')
+  if (savedSettings) {
+    const parsedSettings = JSON.parse(savedSettings)
+    GAME_SETTINGS = {
+      ...GAME_SETTINGS,
+      ...parsedSettings
+    }
+  }
+}
+
+loadSettings()
+updateSettingsMenu()
+
+let attempts = 0
+findAndClick()
+
+// setInterval(() => {
+//   if (!document.querySelector('div[aria-disabled="false"].css-79elbk')) {
+//     attempts = 0
+//     findAndClick()
+//   }
+// }, 1000)
