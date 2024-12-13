@@ -3,7 +3,7 @@
 // @namespace   DaveDev Scripts
 // @match       *://*.empiresbattle.com/*
 // @grant       none
-// @version     0.3.0
+// @version     0.3.1
 // @author      davedev
 // @icon        https://raw.githubusercontent.com/DaveDev13/Empires-battle-bot/refs/heads/main/logo.jpg
 // @downloadURL https://github.com/DaveDev13/Empires-battle-bot/raw/main/empires-battle-autoclicker.user.js
@@ -63,7 +63,7 @@ function getRandomCoordinates(element) {
   return { x: randomX, y: randomY }
 }
 function triggerClick(element) {
-  const coords = getRandomCoordinates(firstElement)
+  const coords = getRandomCoordinates(element)
 
   const events = [
     new MouseEvent('pointerover', { view: window, bubbles: true, cancelable: true, clientX: coords.x, clientY: coords.y }),
@@ -78,37 +78,63 @@ function triggerClick(element) {
   events.forEach(event => element.dispatchEvent(event))
 }
 
+// Функция для проверки уровня энергии
+function checkEnergy() {
+  const energyElement = document.querySelector('._card__energy_descr_m47z2_490')
+  if (energyElement) {
+    const energyText = energyElement.textContent.replace(',', '')
+    const currentEnergy = parseFloat(energyText)
+
+    return currentEnergy
+  }
+  return 100
+}
+
+// Функция для выполнения клика с рандомными координатами и задержкой
 function findAndClick() {
   if (isGamePaused) {
     setTimeout(findAndClick, 1000)
     return
   }
+  const currentEnergy = checkEnergy()
 
-  const firstElement = document.querySelector("#root > main > div._card_m47z2_353 > img")
-  const targetElement = Array.from(document.querySelectorAll('div[aria-disabled="false"]')).find(el => el.className.startsWith('css-'))
-
-  if (firstElement) {
-    function clickWithRandomInterval() {
-      if (isGamePaused) {
-        setTimeout(findAndClick, 1000)
-        return
-      }
-      triggerClick(firstElement)
-
-      setTimeout(clickWithRandomInterval, getClickDelay())
+  if (currentEnergy < GAME_SETTINGS.energyThreshold) {
+    if (!isPaused) {
+      isPaused = true
+      const pauseDuration = getRandomDelay(GAME_SETTINGS.minPause, GAME_SETTINGS.maxPause)
+      console.log(`${logPrefix}Энергия низкая (${currentEnergy}), пауза на ${pauseDuration / 1000} секунд.`, styles.info)
+      setTimeout(() => {
+        isPaused = false
+        startAutoClicker()
+      }, pauseDuration)
     }
-
-    console.log(`${logPrefix}Element found. Starting auto-clicker...`, styles.success)
-    clickWithRandomInterval()
   } else {
-    if (attempts < 5) {
-      attempts++
-      console.log(`${logPrefix}Attempt ${attempts} to find the element failed. Retrying in 3 seconds...`, styles.info)
-      setTimeout(findAndClick, 3000)
+    const firstElement = document.querySelector("#root > main > div._card_m47z2_353 > img")
+    const targetElement = Array.from(document.querySelectorAll('div[aria-disabled="false"]')).find(el => el.className.startsWith('css-'))
+
+    if (firstElement) {
+      function clickWithRandomInterval() {
+        if (isGamePaused) {
+          setTimeout(findAndClick, 1000)
+          return
+        }
+        triggerClick(firstElement)
+
+        setTimeout(clickWithRandomInterval, getClickDelay())
+      }
+
+      console.log(`${logPrefix}Element found. Starting auto-clicker...`, styles.success)
+      clickWithRandomInterval()
     } else {
-      console.log(`${logPrefix}Element not found after 5 attempts. Restarting search...`, styles.error)
-      attempts = 0
-      setTimeout(findAndClick, 3000)
+      if (attempts < 5) {
+        attempts++
+        console.log(`${logPrefix}Attempt ${attempts} to find the element failed. Retrying in 3 seconds...`, styles.info)
+        setTimeout(findAndClick, 3000)
+      } else {
+        console.log(`${logPrefix}Element not found after 5 attempts. Restarting search...`, styles.error)
+        attempts = 0
+        setTimeout(findAndClick, 3000)
+      }
     }
   }
 }
