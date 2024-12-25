@@ -3,7 +3,7 @@
 // @namespace   DaveDev Scripts
 // @match       *://*.empiresbattle.com/*
 // @grant       none
-// @version     0.3.5
+// @version     0.3.6
 // @author      davedev
 // @icon        https://raw.githubusercontent.com/DaveDev13/Empires-battle-bot/refs/heads/main/logo.jpg
 // @downloadURL https://github.com/DaveDev13/Empires-battle-bot/raw/main/empires-battle-autoclicker.user.js
@@ -23,7 +23,7 @@ let GAME_SETTINGS = {
 
 const divForEnergy = '._card__energy_descr_mlp4m_583'
 const divForClick = '#root > main > div._card_mlp4m_440 > img'
-const divForCheck = '._slider_qgtcs_120'
+const divForCheck = '._slider_4emqn_120'
 
 // Функция для расчета задержки между кликами
 function getClickDelay() {
