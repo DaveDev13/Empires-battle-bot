@@ -3,7 +3,7 @@
 // @namespace   DaveDev Scripts
 // @match       *://*.empiresbattle.com/*
 // @grant       none
-// @version     0.3.4
+// @version     0.3.5
 // @author      davedev
 // @icon        https://raw.githubusercontent.com/DaveDev13/Empires-battle-bot/refs/heads/main/logo.jpg
 // @downloadURL https://github.com/DaveDev13/Empires-battle-bot/raw/main/empires-battle-autoclicker.user.js
@@ -18,7 +18,12 @@ let GAME_SETTINGS = {
   checkModalInterval: 999,  // Интервал проверки существования элемента кнопки проверки
   minPause: 66,  // Минимальная пауза в миллисекундах
   maxPause: 666,  // Максимальная пауза в миллисекундах
+  isGamePaused: false,
 }
+
+const divForEnergy = '._card__energy_descr_mlp4m_583'
+const divForClick = '#root > main > div._card_mlp4m_440 > img'
+const divForCheck = '._slider_qgtcs_120'
 
 // Функция для расчета задержки между кликами
 function getClickDelay() {
@@ -53,7 +58,6 @@ console.log(`${logPrefix}Starting`, styles.starting)
 console.log(`${logPrefix}Created by https://t.me/mudachyo`, styles.starting)
 console.log(`${logPrefix}Github https://github.com/mudachyo/Empire-Coin`, styles.starting)
 
-let isGamePaused = false
 
 // Функция для генерации случайных координат в пределах элемента
 function getRandomCoordinates(element) {
@@ -80,7 +84,7 @@ function triggerClick(element) {
 
 // Функция для проверки уровня энергии
 function checkEnergy() {
-  const energyElement = document.querySelector('._card__energy_descr_m47z2_490')
+  const energyElement = document.querySelector(divForEnergy)
   if (energyElement) {
     const energyText = energyElement.textContent.replace(',', '')
     const currentEnergy = parseFloat(energyText)
@@ -92,7 +96,7 @@ function checkEnergy() {
 
 // Функция для выполнения клика с рандомными координатами и задержкой
 function findAndClick() {
-  if (isGamePaused) {
+  if (GAME_SETTINGS.isGamePaused) {
     setTimeout(findAndClick, 1000)
     return
   }
@@ -109,12 +113,12 @@ function findAndClick() {
       }, pauseDuration)
     }
   } else {
-    const firstElement = document.querySelector("#root > main > div._card_m47z2_353 > img")
+    const firstElement = document.querySelector(divForClick)
     const targetElement = Array.from(document.querySelectorAll('div[aria-disabled="false"]')).find(el => el.className.startsWith('css-'))
 
     if (firstElement) {
       function clickWithRandomInterval() {
-        if (isGamePaused) {
+        if (GAME_SETTINGS.isGamePaused) {
           setTimeout(findAndClick, 1000)
           return
         }
@@ -141,7 +145,7 @@ function findAndClick() {
 
 // Функция для проверки и клика по элементу с заданным классом
 function checkAndClickSliderText() {
-  const sliderElement = document.querySelector('._slider_qgtcs_120')
+  const sliderElement = document.querySelector(divForCheck)
   console.log(sliderElement)
   if (sliderElement) {
     toggleGamePause()
@@ -178,9 +182,9 @@ menuTitle.appendChild(closeButton)
 settingsMenu.appendChild(menuTitle)
 
 function toggleGamePause() {
-  isGamePaused = !isGamePaused
-  pauseResumeButton.textContent = isGamePaused ? 'Resume' : 'Pause'
-  pauseResumeButton.style.backgroundColor = isGamePaused ? '#e5c07b' : '#98c379'
+  GAME_SETTINGS.isGamePaused = !GAME_SETTINGS.isGamePaused
+  pauseResumeButton.textContent = GAME_SETTINGS.isGamePaused ? 'Resume' : 'Pause'
+  pauseResumeButton.style.backgroundColor = GAME_SETTINGS.isGamePaused ? '#e5c07b' : '#98c379'
 }
 
 function updateSettingsMenu() {
@@ -578,3 +582,15 @@ findAndClick()
 //     findAndClick()
 //   }
 // }, 1000)
+
+// Раз в N времени записываем в куки значение для обнолвения, обновляем страницу
+// Через 2 секунды начинаем проверять на наличие элемента _main_m47z2_1
+// Если есть, то убираем из куки и делаем
+// Сначала клик по _card__link__anim_enter_done_mlp14m_478
+// Проверить что время не 00 у _autobot__timer_1w8gu_397
+// Если _title_1mag7_34 и текст Бот сборщик СД 1000, то проверяем время как = 9 часов
+// Если меньше, то дальше
+// Если больше или равно, то клик по _autobot__recharge_1w8gu_404 и запускаем новый цикл
+// Клик по _info__btn_1w8gu_298
+// Клик по _close_e48ot_54
+// И запускаем новый цикл
