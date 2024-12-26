@@ -3,7 +3,7 @@
 // @namespace   DaveDev Scripts
 // @match       *://*.empiresbattle.com/*
 // @grant       none
-// @version     0.3.6
+// @version     0.3.7
 // @author      davedev
 // @icon        https://raw.githubusercontent.com/DaveDev13/Empires-battle-bot/refs/heads/main/logo.jpg
 // @downloadURL https://github.com/DaveDev13/Empires-battle-bot/raw/main/empires-battle-autoclicker.user.js
@@ -582,15 +582,19 @@ findAndClick()
 //     findAndClick()
 //   }
 // }, 1000)
+// не давать уходить в спящий режим
+setInterval(() => {
+  console.log('маус')
+  document.body.dispatchEvent(new Event('mousemove'))
+}, 30000) // каждые 30 секунд
 
-// Раз в N времени записываем в куки значение для обнолвения, обновляем страницу
-// Через 2 секунды начинаем проверять на наличие элемента _main_m47z2_1
+// Раз в N времени (2 минуты) записываем в куки значение для обновления, обновляем страницу
+// Через 2 секунды начинаем проверять на наличие элемента _card__top_mlp4m_494
 // Если есть, то убираем из куки и делаем
 // Сначала клик по _card__link__anim_enter_done_mlp14m_478
-// Проверить что время не 00 у _autobot__timer_1w8gu_397
-// Если _title_1mag7_34 и текст Бот сборщик СД 1000, то проверяем время как = 9 часов
-// Если меньше, то дальше
-// Если больше или равно, то клик по _autobot__recharge_1w8gu_404 и запускаем новый цикл
-// Клик по _info__btn_1w8gu_298
-// Клик по _close_e48ot_54
+// Проверить что width > 0 у _autobot__water_line_19uhh_378
+// Если да, то ждем дальше
+// Если меньше или равно 0, то клик по _autobot__recharge_19uhh_404
+// Потом клик по _info__btn_19uhh_298
+// Клик по _close_j1cxg_54
 // И запускаем новый цикл
