@@ -3,7 +3,7 @@
 // @namespace   DaveDev Scripts
 // @match       *://*.empiresbattle.com/*
 // @grant       none
-// @version     0.3.7
+// @version     0.3.8
 // @author      davedev
 // @icon        https://raw.githubusercontent.com/DaveDev13/Empires-battle-bot/refs/heads/main/logo.jpg
 // @downloadURL https://github.com/DaveDev13/Empires-battle-bot/raw/main/empires-battle-autoclicker.user.js
@@ -103,12 +103,12 @@ function findAndClick() {
   const currentEnergy = checkEnergy()
 
   if (currentEnergy < GAME_SETTINGS.energyThreshold) {
-    if (!isPaused) {
-      isPaused = true
+    if (!GAME_SETTINGS.isGamePaused) {
+      GAME_SETTINGS.isGamePaused = true
       const pauseDuration = getRandomDelay(GAME_SETTINGS.minPause, GAME_SETTINGS.maxPause)
       console.log(`${logPrefix}Энергия низкая (${currentEnergy}), пауза на ${pauseDuration / 1000} секунд.`, styles.info)
       setTimeout(() => {
-        isPaused = false
+        GAME_SETTINGS.isGamePaused = false
         startAutoClicker()
       }, pauseDuration)
     }
@@ -582,11 +582,6 @@ findAndClick()
 //     findAndClick()
 //   }
 // }, 1000)
-// не давать уходить в спящий режим
-setInterval(() => {
-  console.log('маус')
-  document.body.dispatchEvent(new Event('mousemove'))
-}, 30000) // каждые 30 секунд
 
 // Раз в N времени (2 минуты) записываем в куки значение для обновления, обновляем страницу
 // Через 2 секунды начинаем проверять на наличие элемента _card__top_mlp4m_494
