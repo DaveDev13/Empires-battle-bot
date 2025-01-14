@@ -3,7 +3,7 @@
 // @namespace   DaveDev Scripts
 // @match       *://*.empiresbattle.com/*
 // @grant       none
-// @version     0.3.8
+// @version     0.3.9
 // @author      davedev
 // @icon        https://raw.githubusercontent.com/DaveDev13/Empires-battle-bot/refs/heads/main/logo.jpg
 // @downloadURL https://github.com/DaveDev13/Empires-battle-bot/raw/main/empires-battle-autoclicker.user.js
@@ -109,12 +109,11 @@ function findAndClick() {
       console.log(`${logPrefix}Энергия низкая (${currentEnergy}), пауза на ${pauseDuration / 1000} секунд.`, styles.info)
       setTimeout(() => {
         GAME_SETTINGS.isGamePaused = false
-        startAutoClicker()
+        findAndClick()
       }, pauseDuration)
     }
   } else {
     const firstElement = document.querySelector(divForClick)
-    const targetElement = Array.from(document.querySelectorAll('div[aria-disabled="false"]')).find(el => el.className.startsWith('css-'))
 
     if (firstElement) {
       function clickWithRandomInterval() {
